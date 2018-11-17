@@ -312,10 +312,12 @@ namespace Nncv2
                 if (player != null)
                 {
                     float distanceToObject = Vector3.Distance(cam.transform.position, player.Transform.position);
+                    /*added by TheMaoci - owner please check this if its ok then apply this ;)*/
+                    //float num = FD(new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z), new Vector3(player.Transform.position.x, player.Transform.position.y, player.Transform.position.z));
+                    
                     var playerBoundingVector = cam.WorldToScreenPoint(player.Transform.position);
                     if (distanceToObject <= _viewdistance && playerBoundingVector.z > 0)
                     {
-
                         var playerHeadVector = new Vector3(
                         cam.WorldToScreenPoint(player.PlayerBones.Head.position).x,
                         cam.WorldToScreenPoint(player.PlayerBones.Head.position).y,
@@ -325,7 +327,7 @@ namespace Nncv2
                         float boxWidth = boxHeight * 0.65f;
                         var playerColor = player.HealthController.IsAlive ? GetPlayerColor(player.Side) : Color.gray;
                         var playerName = player.IsAI ? "AI" : player.Profile.Info.Nickname;
-                        float playerHealth = player.HealthController.SummaryHealth.CurrentValue;
+                        float playerHealth = player.HealthController.SummaryHealth.CurrentValue;//player.ActiveHealthController.HealthRate propably fix
                         string playerText = player.HealthController.IsAlive ? $"{playerName} [{distanceToObject}m] (DEAD)" : $"[{playerHealth}/435] {playerName} [{(int)distanceToObject}]";
                         var playerTextVector = GUI.skin.GetStyle(playerText).CalcSize(new GUIContent(playerText));
                         Utility.DrawBox(boxVector.x - boxWidth / 2f, Screen.height - boxVector.y, boxWidth, boxHeight, playerColor);
@@ -406,7 +408,39 @@ namespace Nncv2
         {
             return Math.Sqrt(Math.Pow(x2 - x1, 2.0) + Math.Pow(y2 - y1, 2.0));
         }
-
+        /*Made by TheMaoci aka SxW - owner please check this if its ok then apply this ;)*/
+        /* Faster calculating distance with max 1m wrong calculation while object is in distance above 100m*/
+        /* Using Vector3 */
+        
+        private float FD(Vector3 c1, Vector3 c2)
+        {
+            float dx, dy, dz, d0;
+            dx=c2.x-c1.x;
+            dy=c2.y-c1.y;
+            dz=c2.z-c1.z;
+            d0=(dx * dx + dy * dy + dz * dz);
+            return FSqrt(d0);
+        }
+        /*structs and calculations*/
+        [StructLayout(LayoutKind.Explicit)]
+        private struct FloatIntUnion{
+            [FieldOffset(0)]
+            public float f;
+            [FieldOffset(0)]
+            public int tmp;
+        }
+        public static float FSqrt(float z)
+        {
+            if (z == 0) return 0;
+            FloatIntUnion u;
+            u.tmp = 0;
+            u.f = z;
+            u.tmp -= 1 << 23;
+            u.tmp >>= 1;
+            u.tmp += 1 << 29;
+            return u.f;
+        }
+        /*ends*/
         private void Circle(int X, int Y, int radius)
         {
             float boxXOffset = X;
